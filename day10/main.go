@@ -98,7 +98,7 @@ import (
 //		return -1, -1
 //	}
 func main() {
-	file, err := os.Open("../inputs/day10/testinput2.txt")
+	file, err := os.Open("../inputs/day10/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,6 +135,7 @@ func main() {
 			if x != -1 {
 				loop[y] = append(loop[y], x)
 			}
+
 			//fmt.Printf("%d %d\n", x, y)
 			cX = routes[i][0]
 			cY = routes[i][1]
@@ -142,33 +143,51 @@ func main() {
 			routes[i][1] = y
 			steps++
 		}
+
 		inside := 0
-		min, max := 0, 0
 		for k := range loop {
-			if min > k {
-				min = k
-			}
-			if max < k {
-				max = k
-			}
-		}
-		for k := range loop {
-			if k != min && k != max {
-				line := loop[k]
-				sort.Ints(line)
-				fmt.Printf("y %d:", k)
-				fmt.Print(line)
-				in := true
-				for j := 1; j < len(line); j++ {
-					if in {
-						inside += line[j] - line[j-1] - 1
-						fmt.Printf("%d ", inside)
+			line := loop[k]
+			sort.Ints(line)
+			fmt.Printf("y %d:", k)
+			fmt.Print(line)
+			for j := 0; j < len(line)-1; j++ {
+				x := line[j]
+				if field[k][x] == '|' || field[k][x] == 'S' {
+					pipeCount := 0
+					for l := j - 1; 0 <= l; l-- {
+						c := field[k][line[l]]
+						if c == '|' || c == 'S' {
+							pipeCount++
+						}
 					}
-					if field[k][line[j]] != '-' && field[k][line[j-1]] != '-' {
-						in = !in
+					if pipeCount%2 == 0 {
+						inside += line[j+1] - line[j] - 1
+					}
+
+				} else if field[k][x] == 'J' {
+					pipeCount := 0
+					for l := j + 1; l < len(line); l++ {
+						c := field[k][line[l]]
+						if c == '|' || c == 'J' || c == 'L' || c == 'S' {
+							pipeCount++
+						}
+					}
+					if pipeCount%2 != 0 {
+						inside += line[j+1] - line[j] - 1
+					}
+				} else if field[k][x] == '7' {
+					pipeCount := 0
+					for l := j + 1; l < len(line); l++ {
+						c := field[k][line[l]]
+						if c == '|' || c == '7' || c == 'F' || c == 'S' {
+							pipeCount++
+						}
+					}
+					if pipeCount%2 != 0 {
+						inside += line[j+1] - line[j] - 1
 					}
 				}
-
+				//fmt.Printf(" x: %d x1: %d u:%d ", line[j], line[j+1], inside)
 			}
 			fmt.Println(inside)
 		}
