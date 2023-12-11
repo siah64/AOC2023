@@ -99,7 +99,7 @@ import (
 //		return -1, -1
 //	}
 func main() {
-	file, err := os.Open("../inputs/day10/testinput2.txt")
+	file, err := os.Open("../inputs/day10/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -145,7 +145,7 @@ func main() {
 			steps++
 		}
 
-		field[start[1]] = strings.ReplaceAll(field[start[1]], "S", "7")
+		field[start[1]] = strings.ReplaceAll(field[start[1]], "S", "|")
 		inside := 0
 		for k := range loop {
 			line := loop[k]
