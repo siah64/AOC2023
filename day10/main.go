@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 )
 
 // func main() {
@@ -98,7 +99,7 @@ import (
 //		return -1, -1
 //	}
 func main() {
-	file, err := os.Open("../inputs/day10/input.txt")
+	file, err := os.Open("../inputs/day10/testinput2.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -144,6 +145,7 @@ func main() {
 			steps++
 		}
 
+		field[start[1]] = strings.ReplaceAll(field[start[1]], "S", "F")
 		inside := 0
 		for k := range loop {
 			line := loop[k]
@@ -152,11 +154,11 @@ func main() {
 			fmt.Print(line)
 			for j := 0; j < len(line)-1; j++ {
 				x := line[j]
-				if field[k][x] == '|' || field[k][x] == 'S' {
+				if field[k][x] == '|' {
 					pipeCount := 0
 					for l := j - 1; 0 <= l; l-- {
 						c := field[k][line[l]]
-						if c == '|' || c == 'S' {
+						if c == '|' {
 							pipeCount++
 						}
 					}
@@ -168,7 +170,7 @@ func main() {
 					pipeCount := 0
 					for l := j + 1; l < len(line); l++ {
 						c := field[k][line[l]]
-						if c == '|' || c == 'J' || c == 'L' || c == 'S' {
+						if c == '|' || c == 'J' || c == 'L' {
 							pipeCount++
 						}
 					}
@@ -179,7 +181,7 @@ func main() {
 					pipeCount := 0
 					for l := j + 1; l < len(line); l++ {
 						c := field[k][line[l]]
-						if c == '|' || c == '7' || c == 'F' || c == 'S' {
+						if c == '|' || c == '7' || c == 'F' {
 							pipeCount++
 						}
 					}
