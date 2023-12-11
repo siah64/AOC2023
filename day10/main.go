@@ -145,54 +145,75 @@ func main() {
 			steps++
 		}
 
-		field[start[1]] = strings.ReplaceAll(field[start[1]], "S", "F")
+		field[start[1]] = strings.ReplaceAll(field[start[1]], "S", "7")
 		inside := 0
 		for k := range loop {
 			line := loop[k]
 			sort.Ints(line)
 			fmt.Printf("y %d:", k)
 			fmt.Print(line)
+			in := false
 			for j := 0; j < len(line)-1; j++ {
-				x := line[j]
-				if field[k][x] == '|' {
-					pipeCount := 0
-					for l := j - 1; 0 <= l; l-- {
-						c := field[k][line[l]]
-						if c == '|' {
-							pipeCount++
-						}
-					}
-					if pipeCount%2 == 0 {
-						inside += line[j+1] - line[j] - 1
-					}
+				c := field[k][line[j]]
+				if c == '|' || c == 'J' || c == 'L' {
+					in = !in
 
-				} else if field[k][x] == 'J' {
-					pipeCount := 0
-					for l := j + 1; l < len(line); l++ {
-						c := field[k][line[l]]
-						if c == '|' || c == 'J' || c == 'L' {
-							pipeCount++
-						}
-					}
-					if pipeCount%2 != 0 {
-						inside += line[j+1] - line[j] - 1
-					}
-				} else if field[k][x] == '7' {
-					pipeCount := 0
-					for l := j + 1; l < len(line); l++ {
-						c := field[k][line[l]]
-						if c == '|' || c == '7' || c == 'F' {
-							pipeCount++
-						}
-					}
-					if pipeCount%2 != 0 {
-						inside += line[j+1] - line[j] - 1
-					}
 				}
-				//fmt.Printf(" x: %d x1: %d u:%d ", line[j], line[j+1], inside)
+				if in {
+					inside += line[j+1] - line[j] - 1
+				}
+				fmt.Println(inside)
 			}
-			fmt.Println(inside)
+			// for j := 0; j < len(line)-1; j++ {
+			// 	x := line[j]
+			// 	if field[k][x] == '|' {
+			// 		pipeCount := 0
+			// 		for l := j - 1; 0 <= l; l-- {
+			// 			c := field[k][line[l]]
+			// 			if c == '|' {
+			// 				pipeCount++
+			// 			}
+			// 		}
+			// 		if pipeCount%2 == 0 {
+			// 			inside += line[j+1] - line[j] - 1
+			// 		}
+
+			// 	} else if field[k][x] == 'J' {
+			// 		pipeCount := 0
+			// 		for l := j + 1; l < len(line); l++ {
+			// 			c := field[k][line[l]]
+			// 			if c == '|' || c == 'J' || c == 'L' {
+			// 				pipeCount++
+			// 			}
+			// 		}
+			// 		if pipeCount%2 != 0 {
+			// 			inside += line[j+1] - line[j] - 1
+			// 		}
+			// 	} else if field[k][x] == '7' {
+			// 		pipeCount := 0
+			// 		for l := j + 1; l < len(line); l++ {
+			// 			c := field[k][line[l]]
+			// 			if c == '|' || c == '7' || c == 'F' {
+			// 				pipeCount++
+			// 			}
+			// 		}
+			// 		if pipeCount%2 != 0 {
+			// 			inside += line[j+1] - line[j] - 1
+			// 		}
+			// 	}
+			// 	//fmt.Printf(" x: %d x1: %d u:%d ", line[j], line[j+1], inside)
+			// }
 		}
+		// maze := [200][200]int{}
+		// for t := range loop {
+		// 	line := loop[t]
+		// 	for t1 := range line {
+		// 		maze[t][line[t1]] = 1
+		// 	}
+		// }
+		// for t := range maze {
+		// 	fmt.Println(maze[t])
+		// }
 		fmt.Println(inside)
 	}
 }
