@@ -97,7 +97,12 @@ func count(coins []int, n int, sum int, p []int) [][]int {
 	if n <= 0 {
 		return [][]int{}
 	}
-	return append(count(coins, n, sum-coins[n-1], append(cp, coins[n-1])), count(coins, n-1, sum, cp)...)
+	c1 := count(coins, n, sum-coins[n-1], append(cp, coins[n-1]))
+	c2 := count(coins, n-1, sum, cp)
+	c3 := make([][]int, len(c1), len(c1)+len(c2))
+	copy(c3, c1)
+
+	return append(c3, c2...)
 }
 func legal(damaged []int) bool {
 	for i := 1; i < len(damaged)-1; i++ {
