@@ -35,28 +35,36 @@ func main() {
 	info := []string{}
 	for scanner.Scan() {
 		lines := strings.Split(scanner.Text(), " ")
-		info = append(info, lines[0])
+		s := lines[0]
+		for i := 1; i < 3; i++ {
+			s += "?"
+			s += lines[0]
+		}
+		info = append(info, s)
 		functionalSprings := strings.Split(lines[1], ",")
 		spring := []int{}
-		for i := range functionalSprings {
-			num, _ := strconv.Atoi(functionalSprings[i])
-			spring = append(spring, num)
+		for fold := 0; fold < 3; fold++ {
+			for i := range functionalSprings {
+				num, _ := strconv.Atoi(functionalSprings[i])
+				spring = append(spring, num)
+			}
 		}
 		springs = append(springs, spring)
 	}
-	result := 0
+	//result := 0
 	for i := range springs {
 		spring := springs[i]
 		config := info[i]
 		possible := calPermutations(spring, config)
-		fmt.Printf("%v, possible: %d", config, possible)
-		config = "?"
-		config += info[i]
-		expo := calPermutations(spring, config)
-		fmt.Printf("%v, possible: %d\n", config, expo)
-		result += (possible * expo * expo * expo * expo)
+		//fmt.Printf("%v, possible: %d", config, possible)
+		fmt.Println(possible)
+		//config = "?"
+		//config += info[i]
+		// expo := calPermutations(spring, config)
+		// fmt.Printf("%v, possible: %d\n", config, expo)
+		// result += (possible * expo * expo * expo * expo)
 	}
-	fmt.Println(result)
+	//fmt.Println(result)
 }
 func calPermutations(spring []int, config string) int {
 	sum := 0
@@ -196,6 +204,7 @@ func possibleSolution(ps string, s string) bool {
 			}
 		}
 	}
+	//fmt.Println(ps, s)
 	return true
 }
 
