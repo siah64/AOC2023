@@ -24,7 +24,7 @@ func main() {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
-	file, err := os.Open("../inputs/day12/testinput.txt")
+	file, err := os.Open("../inputs/day12/testinput4.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,14 +36,15 @@ func main() {
 	for scanner.Scan() {
 		lines := strings.Split(scanner.Text(), " ")
 		s := lines[0]
-		for i := 1; i < 3; i++ {
+		n := 2
+		for i := 1; i < n; i++ {
 			s += "?"
 			s += lines[0]
 		}
 		info = append(info, s)
 		functionalSprings := strings.Split(lines[1], ",")
 		spring := []int{}
-		for fold := 0; fold < 3; fold++ {
+		for fold := 0; fold < n; fold++ {
 			for i := range functionalSprings {
 				num, _ := strconv.Atoi(functionalSprings[i])
 				spring = append(spring, num)
@@ -67,6 +68,7 @@ func main() {
 	//fmt.Println(result)
 }
 func calPermutations(spring []int, config string) int {
+	//f, _ := os.Create("./dat1")
 	sum := 0
 	for j := range spring {
 		sum += spring[j]
@@ -87,8 +89,12 @@ func calPermutations(spring []int, config string) int {
 			}
 			bag := [][]int{}
 			findPerms(damaged, 0, len(damaged), &bag)
+			fmt.Println(len(bag))
 			for j := 0; j < len(bag); j++ {
 				if legal(bag[j]) {
+					//test := fmt.Sprintf("%v\n", bag[j])
+					//f.Write([]byte(test))
+					//fmt.Println(bag[j])
 					ps := generate(bag[j], spring)
 					if possibleSolution(ps, config) {
 						possible++
