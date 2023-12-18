@@ -10,7 +10,7 @@ import (
 var lastCycle = map[int][][]byte{}
 
 func main() {
-	file, err := os.Open("../inputs/day14/testinput.txt")
+	file, err := os.Open("../inputs/day14/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func main() {
 			}
 			fmt.Println()
 			fmt.Printf("cycle %d, start %d\n", i+1, c)
-			d := ((1000000000 - c + 1) % (i + 1 - c))
+			d := ((1010 - c + 1) % (i + 1 - c))
 			fmt.Println(d)
 			if d == 0 {
 				d = i - 1
