@@ -69,6 +69,7 @@ func main() {
 	//fmt.Println(result)
 }
 func calPermutations(spring []int, config string) int {
+	//f, _ := os.Create("./dat1")
 	sum := 0
 	for j := range spring {
 		sum += spring[j]
@@ -89,8 +90,12 @@ func calPermutations(spring []int, config string) int {
 			}
 			bag := [][]int{}
 			findPerms(damaged, 0, len(damaged), &bag)
+			fmt.Println(len(bag))
 			for j := 0; j < len(bag); j++ {
 				if legal(bag[j]) {
+					//test := fmt.Sprintf("%v\n", bag[j])
+					//f.Write([]byte(test))
+					//fmt.Println(bag[j])
 					ps := generate(bag[j], spring)
 					if possibleSolution(ps, config) {
 						possible++
