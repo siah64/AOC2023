@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -24,7 +25,7 @@ func main() {
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
-	file, err := os.Open("../inputs/day12/testinput.txt")
+	file, err := os.Open("../inputs/day12/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,14 +37,15 @@ func main() {
 	for scanner.Scan() {
 		lines := strings.Split(scanner.Text(), " ")
 		s := lines[0]
-		for i := 1; i < 3; i++ {
+		f := 1
+		for i := 1; i < f; i++ {
 			s += "?"
 			s += lines[0]
 		}
 		info = append(info, s)
 		functionalSprings := strings.Split(lines[1], ",")
 		spring := []int{}
-		for fold := 0; fold < 3; fold++ {
+		for fold := 0; fold < f; fold++ {
 			for i := range functionalSprings {
 				num, _ := strconv.Atoi(functionalSprings[i])
 				spring = append(spring, num)
@@ -76,7 +78,7 @@ func calPermutations(spring []int, config string) int {
 	for j := 0; j < len(coins); j++ {
 		coins[j] = j + 1
 	}
-	solutions := count1(sum)
+	solutions := count1(sum, len(spring)-1, len(spring)+1)
 	possible := 0
 	for s := range solutions {
 		damaged := make([]int, len(spring)+1)
@@ -100,19 +102,19 @@ func calPermutations(spring []int, config string) int {
 	return possible
 }
 func generate(damaged []int, functional []int) string {
-	s := ""
+	var buffer bytes.Buffer
 	for i := range damaged {
 		for j := 0; j < damaged[i]; j++ {
-			s += "."
+			buffer.WriteString(".")
 		}
 		if i < len(functional) {
 
 			for j := 0; j < functional[i]; j++ {
-				s += "#"
+				buffer.WriteString("#")
 			}
 		}
 	}
-	return s
+	return buffer.String()
 }
 func count(coins []int, n int, sum int, p []int) [][]int {
 	if sumCache[sum] != nil {
@@ -134,15 +136,29 @@ func count(coins []int, n int, sum int, p []int) [][]int {
 	return append(count(coins, n, sum-coins[n-1], append(p, coins[n-1])), count(coins, n-1, sum, p)...)
 }
 
-func count1(sum int) [][]int {
-	if sumCache[sum] != nil {
+func count1(sum int, min int, max int) [][]int {
+	answer := sumCache[sum]
+	temp := [][]int{}
+	if answer != nil {
 		//fmt.Printf("Cache hit %d \n", sum)
-		return sumCache[sum]
+		for i := range answer {
+			if len(answer[i]) >= min && len(answer[i]) <= max {
+				temp = append(temp, answer[i])
+			}
+		}
+		return temp
 	}
 
 	result := backtrack(sum, []int{}, 1)
 	sumCache[sum] = result
-	return sumCache[sum]
+	answer = result
+	for i := range answer {
+		if len(answer[i]) >= min && len(answer[i]) <= max {
+			temp = append(temp, answer[i])
+		}
+	}
+	return temp
+
 }
 
 func backtrack(remaining int, currentCombination []int, start int) [][]int {
