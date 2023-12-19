@@ -131,11 +131,14 @@ func main() {
 }
 func eval(value string, xmasList map[byte][]int) int {
 	wf := workflows[value]
-	lList := map[byte][]int{}
-	rList := map[byte][]int{}
-	copy(lList, xmasList)
+	lList := map[byte][]int{'x': xmasList['x'], 'm': xmasList['m'], 'a': xmasList['a'], 's': xmasList['s']}
+	rList := map[byte][]int{'x': xmasList['x'], 'm': xmasList['m'], 'a': xmasList['a'], 's': xmasList['s']}
 	if wf.eval == '>' {
+		lList[wf.value][1] = wf.amount - 1
+		rList[wf.value][0] = wf.amount
 	} else {
+		lList[wf.value][1] = wf.amount - 1
+		rList[wf.value][0] = wf.amount
 	}
 	if value == "R" {
 		return 0
