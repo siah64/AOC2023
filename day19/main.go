@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -108,7 +109,7 @@ import (
 type workflow struct {
 	value  byte
 	eval   byte
-	amount int
+	amount int64
 	left   string
 	right  string
 }
@@ -116,7 +117,7 @@ type workflow struct {
 var workflows = map[string]workflow{}
 
 func main() {
-	file, err := os.Open("../inputs/day19/input.txt")
+	file, err := os.Open("../inputs/day19/testinput2.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,26 +128,62 @@ func main() {
 		flow := strings.Split(lines[1][:len(lines[1])-1], ":")
 		parseFlow(lines[0], flow)
 	}
+	result := eval("in", map[byte][]int64{'x': {1, 4000}, 'm': {1, 4000}, 'a': {1, 4000}, 's': {1, 4000}})
 
+	fmt.Println(result)
 }
-func eval(value string, xmasList map[byte][]int) int {
-	wf := workflows[value]
-	lList := map[byte][]int{'x': xmasList['x'], 'm': xmasList['m'], 'a': xmasList['a'], 's': xmasList['s']}
-	rList := map[byte][]int{'x': xmasList['x'], 'm': xmasList['m'], 'a': xmasList['a'], 's': xmasList['s']}
-	if wf.eval == '>' {
-		lList[wf.value][1] = wf.amount - 1
-		rList[wf.value][0] = wf.amount
-	} else {
-		lList[wf.value][1] = wf.amount - 1
-		rList[wf.value][0] = wf.amount
+func eval(value string, xmasList map[byte][]int64) int64 {
+	//guardrails
+	if xmasList == nil {
+		return 0
+	}
+	for i := range xmasList {
+		if xmasList[i][0] > xmasList[i][1] {
+			return 0
+		}
 	}
 	if value == "R" {
+		//fmt.Println(xmasList)
 		return 0
 	}
 	if value == "A" {
+		//fmt.Println(xmasList)
 		return getCombinations(xmasList)
 	}
-	return eval(wf.left, xmasList) + eval(wf.right, xmasList)
+	wf := workflows[value]
+	lList := map[byte][]int64{'x': append([]int64{}, xmasList['x']...), 'm': append([]int64{}, xmasList['m']...), 'a': append([]int64{}, xmasList['a']...), 's': append([]int64{}, xmasList['s']...)}
+	rList := map[byte][]int64{'x': append([]int64{}, xmasList['x']...), 'm': append([]int64{}, xmasList['m']...), 'a': append([]int64{}, xmasList['a']...), 's': append([]int64{}, xmasList['s']...)}
+	if wf.eval == '>' {
+		if lList[wf.value][1] > wf.amount {
+			lList[wf.value][1] = wf.amount
+		}
+		if rList[wf.value][0] <= wf.amount {
+			rList[wf.value][0] = wf.amount + 1
+		}
+		//uncovered
+		if lList[wf.value][0] > wf.amount {
+			lList = nil
+		}
+		if rList[wf.value][1] <= wf.amount {
+			rList = nil
+		}
+		return eval(wf.right, lList) + eval(wf.left, rList)
+	} else {
+		if lList[wf.value][1] >= wf.amount {
+			lList[wf.value][1] = wf.amount - 1
+		}
+		if rList[wf.value][0] < wf.amount {
+			rList[wf.value][0] = wf.amount
+		}
+		//uncovered
+		if lList[wf.value][0] >= wf.amount {
+			lList = nil
+		}
+		if rList[wf.value][1] < wf.amount {
+			rList = nil
+		}
+		return eval(wf.left, lList) + eval(wf.right, rList)
+	}
 }
 func parseFlow(value string, flows []string) {
 	if len(flows) > 2 {
@@ -163,11 +200,11 @@ func parseFlow(value string, flows []string) {
 	} else {
 		right = lr[1]
 	}
-	wf := workflow{value: flows[0][0], eval: flows[0][1], amount: num, left: left, right: right}
+	wf := workflow{value: flows[0][0], eval: flows[0][1], amount: int64(num), left: left, right: right}
 	workflows[value] = wf
 }
 
-func getCombinations(xmasList map[byte][]int) int {
+func getCombinations(xmasList map[byte][]int64) int64 {
 	x := xmasList['x'][1] - xmasList['x'][0] + 1
 	m := xmasList['m'][1] - xmasList['m'][0] + 1
 	a := xmasList['a'][1] - xmasList['a'][0] + 1
