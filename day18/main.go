@@ -333,21 +333,23 @@ func main() {
 	}
 	for i := range coords {
 		coord := coords[i]
-		coords[i] = []int{coord[0] - sX, coord[1] - sY}
+		coords[i] = []int{coord[0] - sX + 1, coord[1] - sY + 1}
 	}
 	result := 0
+	fmt.Println(coords)
 	for i := len(coords) - 1; i >= 0; i-- {
 		if i == 0 {
-			coord1 := coords[i]
-			coord2 := coords[len(coords)-1]
+			fmt.Println(result)
+			coord1 := coords[len(coords)-1]
+			coord2 := coords[i]
 			a := coord1[0] * coord2[1]
 			b := coord1[1] * coord2[0]
 			sum := a - b
 			result += sum
 
 		} else {
-			coord1 := coords[i]
-			coord2 := coords[i-1]
+			coord1 := coords[i-1]
+			coord2 := coords[i]
 			a := coord1[0] * coord2[1]
 			b := coord1[1] * coord2[0]
 			sum := a - b

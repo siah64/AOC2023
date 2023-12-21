@@ -6,6 +6,9 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/dominikbraun/graph"
+	"github.com/dominikbraun/graph/draw"
 )
 
 type Pulse int32
@@ -97,6 +100,7 @@ func main() {
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
+	g := graph.New(graph.StringHash, graph.Directed())
 	for scanner.Scan() {
 		lines := strings.Split(scanner.Text(), " -> ")
 		receivers := strings.Split(lines[1], ", ")
@@ -116,6 +120,18 @@ func main() {
 			}
 		}
 	}
+	for i := range circuit {
+		g.AddVertex(i)
+
+	}
+	for i := range circuit {
+		for j := range circuit[i].receivers {
+			g.AddEdge(i, circuit[i].receivers[j])
+		}
+	}
+
+	file, _ = os.Create("my-graph.gv")
+	_ = draw.DOT(g, file)
 	for i := range order {
 		c := order[i]
 		current := circuit[c]
@@ -132,20 +148,29 @@ func main() {
 			current.senders = senders
 		}
 	}
-	for i := 0; i < 1000; i++ {
+	cycle := map[string]int{}
+	for i := 0; i < 100000000000; i++ {
 		l++
 		sOrder := queue{}
 		sOrder = sOrder.Push(Signal{"broadcaster", low})
+		//hasHigh := false
 		for len(sOrder) != 0 {
 			c := Signal{}
 			sOrder, c = sOrder.Pop()
 			current := circuit[c.name]
 			for r := range current.receivers {
 				pulse := current.Send(circuit[current.receivers[r]], c.s)
-				if current.receivers[r] == "rx" && pulse == low {
-					fmt.Println(i)
-					break
+				// if current.receivers[r] == "rx" {
+				// 	fmt.Println(i, c.s)
+				// 	break
+				// }
+				if circuit[current.receivers[r]] != nil && current.receivers[r] == "jm" && (c.s == high) {
+					if cycle[c.name] != 0 {
+						fmt.Printf("%s %d %d\n", c.name, i-cycle[c.name], i)
+					}
+					cycle[c.name] = i
 				}
+
 				if pulse != none {
 					sOrder = sOrder.Push(Signal{current.receivers[r], pulse})
 				}

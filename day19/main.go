@@ -117,7 +117,7 @@ type workflow struct {
 var workflows = map[string]workflow{}
 
 func main() {
-	file, err := os.Open("../inputs/day19/testinput2.txt")
+	file, err := os.Open("../inputs/day19/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -137,6 +137,7 @@ func eval(value string, xmasList map[byte][]int64) int64 {
 	if xmasList == nil {
 		return 0
 	}
+
 	for i := range xmasList {
 		if xmasList[i][0] > xmasList[i][1] {
 			return 0
@@ -147,7 +148,7 @@ func eval(value string, xmasList map[byte][]int64) int64 {
 		return 0
 	}
 	if value == "A" {
-		//fmt.Println(xmasList)
+		fmt.Printf("(%d, %d) (%d, %d) (%d, %d) (%d, %d)\n", xmasList['x'][0], xmasList['x'][1], xmasList['m'][0], xmasList['m'][1], xmasList['a'][0], xmasList['a'][1], xmasList['s'][0], xmasList['s'][1])
 		return getCombinations(xmasList)
 	}
 	wf := workflows[value]
@@ -160,20 +161,48 @@ func eval(value string, xmasList map[byte][]int64) int64 {
 		if rList[wf.value][0] <= wf.amount {
 			rList[wf.value][0] = wf.amount + 1
 		}
+		if lList['x'][0] == 1 && lList['x'][1] == 1276 &&
+			lList['m'][0] == 1 && lList['m'][1] == 1989 &&
+			lList['a'][0] == 3235 && lList['a'][1] == 4000 &&
+			lList['s'][0] == 2752 && lList['s'][1] == 4000 {
+			fmt.Println(lList)
+		}
+		if rList['x'][0] == 1 && rList['x'][1] == 1276 &&
+			rList['m'][0] == 1 && rList['m'][1] == 1989 &&
+			rList['a'][0] == 3235 && rList['a'][1] == 4000 &&
+			rList['s'][0] == 2752 && rList['s'][1] == 4000 {
+
+			fmt.Println(lList)
+		}
 		//uncovered
 		if lList[wf.value][0] > wf.amount {
 			lList = nil
 		}
+
 		if rList[wf.value][1] <= wf.amount {
 			rList = nil
 		}
+
 		return eval(wf.right, lList) + eval(wf.left, rList)
-	} else {
+	} else { //M < 100
 		if lList[wf.value][1] >= wf.amount {
 			lList[wf.value][1] = wf.amount - 1
 		}
 		if rList[wf.value][0] < wf.amount {
 			rList[wf.value][0] = wf.amount
+		}
+		if lList['x'][0] == 1 && lList['x'][1] == 1276 &&
+			lList['m'][0] == 1 && lList['m'][1] == 1989 &&
+			lList['a'][0] == 3235 && lList['a'][1] == 4000 &&
+			lList['s'][0] == 2752 && lList['s'][1] == 4000 {
+			fmt.Println(lList)
+		}
+		if rList['x'][0] == 1 && rList['x'][1] == 1276 &&
+			rList['m'][0] == 1 && rList['m'][1] == 1989 &&
+			rList['a'][0] == 3235 && rList['a'][1] == 4000 &&
+			rList['s'][0] == 2752 && rList['s'][1] == 4000 {
+
+			fmt.Println(lList)
 		}
 		//uncovered
 		if lList[wf.value][0] >= wf.amount {
@@ -182,13 +211,14 @@ func eval(value string, xmasList map[byte][]int64) int64 {
 		if rList[wf.value][1] < wf.amount {
 			rList = nil
 		}
+
 		return eval(wf.left, lList) + eval(wf.right, rList)
 	}
 }
 func parseFlow(value string, flows []string) {
 	if len(flows) > 2 {
 		f := strings.Split(flows[1], ",")[1]
-		parseFlow(value+"r", append([]string{f}, flows[2:]...))
+		parseFlow(value+"1", append([]string{f}, flows[2:]...))
 	}
 	num, _ := strconv.Atoi(flows[0][2:])
 	left := ""
@@ -196,7 +226,7 @@ func parseFlow(value string, flows []string) {
 	lr := strings.Split(flows[1], ",")
 	left = lr[0]
 	if len(lr[1]) > 1 && (lr[1][1] == '>' || lr[1][1] == '<') {
-		right = value + "r"
+		right = value + "1"
 	} else {
 		right = lr[1]
 	}

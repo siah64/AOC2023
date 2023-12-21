@@ -18,9 +18,10 @@ type PosWalk struct {
 
 var field = [][]byte{}
 var visited = map[PosWalk]int{}
+var brothers = map[PosWalk]map[PosWalk]int{}
 
 func main() {
-	file, err := os.Open("../inputs/day21/input.txt")
+	file, err := os.Open("../inputs/day21/testinput.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -44,12 +45,17 @@ func main() {
 			}
 		}
 	}
-	walk(64, startX, startY, 1)
+	walk(10, startX, startY, 1)
 	result := 0
 	for i := range visited {
 		if i.steps == 0 {
 			//fmt.Println(i)
 			result++
+		}
+	}
+	for i := range brothers {
+		if i.steps == 0 {
+			fmt.Println(i, brothers[i])
 		}
 	}
 	fmt.Println(result)
@@ -67,14 +73,17 @@ func walk(steps int, posX int, posY int, taken int) {
 		x := posX + move[0]
 		y := posY + move[1]
 		//in bounds
-		if x >= 0 && y >= 0 && x < len(field[0]) && y < len(field) {
-			if field[y][x] == '.' {
-				even := taken % 2
-				pW := PosWalk{Pos{x, y}, even}
-				if visited[pW] == 0 || visited[pW] > taken {
-					visited[pW] = taken
-					explore = append(explore, []int{x, y})
+		tX, tY := getTile(x, y)
+		if field[tY][tX] == '.' {
+			even := taken % 2
+			pW := PosWalk{Pos{x, y}, even}
+			if visited[pW] == 0 || visited[pW] > taken {
+				visited[pW] = taken
+				if brothers[PosWalk{Pos{tX, tY}, even}] == nil {
+					brothers[PosWalk{Pos{tX, tY}, even}] = map[PosWalk]int{}
 				}
+				brothers[PosWalk{Pos{tX, tY}, even}][pW] = taken
+				explore = append(explore, []int{x, y})
 			}
 		}
 	}
@@ -84,17 +93,17 @@ func walk(steps int, posX int, posY int, taken int) {
 }
 
 // translate x y modulo if pos then mod if negative ????
-func getTile(x int, y int) byte {
+func getTile(x int, y int) (int, int) {
 	tX, tY := 0, 0
 	if x > 0 {
 		tX = x % len(field[0])
-	} else {
-		tX = len(field[0]) - x%len(field[0])
+	} else if x < 0 {
+		tX = (len(field[0]) - 1) + x%len(field[0])
 	}
 	if y > 0 {
 		tY = y % len(field)
-	} else {
-		tY = len(field) - y%len(field)
+	} else if y < 0 {
+		tY = (len(field) - 1) + y%len(field)
 	}
-	return field[tY][tX]
+	return tX, tY
 }
