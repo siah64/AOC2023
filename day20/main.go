@@ -8,12 +8,12 @@ import (
 	"strings"
 )
 
-type Signal int32
+type Pulse int32
 
 const (
-	none Signal = -1
-	low  Signal = 0
-	high Signal = 1
+	none Pulse = -1
+	low  Pulse = 0
+	high Pulse = 1
 )
 
 type MType int32
@@ -27,56 +27,71 @@ const (
 type comm struct {
 	t         MType
 	receivers []string
-	state     Signal
-	pulse     Signal
+	state     Pulse
 	senders   []string
+}
+
+type Signal struct {
+	name string
+	s    Pulse
 }
 
 var h = 0
 var l = 0
 
-type stack []string
+type queue []Signal
 
-func (s stack) Push(v string) stack {
-	return append(s, v)
+func (q queue) Push(v Signal) queue {
+	return append(q, v)
 }
 
-func (s stack) Pop() (stack, string) {
+func (q queue) Pop() (queue, Signal) {
 	// FIXME: What do we do if the stack is empty, though?
 
-	l := len(s)
-	return s[:l-1], s[l-1]
+	//l := len(s)
+	return q[1:], q[0]
 }
 
-func (a comm) Send(c *comm, p Signal) {
-	if a.t != flipflop {
-		if p == high {
-			h++
-		} else if p == low {
-			l++
-		}
+func (a comm) Send(c *comm, p Pulse) Pulse {
+	if p == high {
+		h++
+	} else if p == low {
+		l++
 	}
+
+	if c == nil {
+		return none
+	}
+
 	switch c.t {
 	case flipflop:
 		if p == low {
 			if c.state == low {
-				c.pulse = high
 				c.state = high
-				h++
+				return high
 			} else if c.state == high {
-				c.pulse = low
 				c.state = low
-				l++
+				return low
 			}
 		}
+	case conjunction:
+		for s := range c.senders {
+			if circuit[c.senders[s]].state == low {
+				c.state = high
+				return high
+			}
+		}
+		c.state = low
+		return low
 	}
+	return none
 }
 
 var circuit = map[string]*comm{}
 var order = []string{}
 
 func main() {
-	file, err := os.Open("../inputs/day20/testinput.txt")
+	file, err := os.Open("../inputs/day20/input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -117,36 +132,26 @@ func main() {
 			current.senders = senders
 		}
 	}
-	sOrder := stack{}
-	sOrder.Push("broadcaster")
-	for len(sOrder) != 0 {
-
-	}
-	for i := range order {
-		c := order[i]
-		current := circuit[c]
-		if current.t == conjunction {
-			allLow := true
-			for s := range current.senders {
-				if circuit[current.senders[s]].state == high {
-					allLow = false
+	for i := 0; i < 1000; i++ {
+		l++
+		sOrder := queue{}
+		sOrder = sOrder.Push(Signal{"broadcaster", low})
+		for len(sOrder) != 0 {
+			c := Signal{}
+			sOrder, c = sOrder.Pop()
+			current := circuit[c.name]
+			for r := range current.receivers {
+				pulse := current.Send(circuit[current.receivers[r]], c.s)
+				if current.receivers[r] == "rx" && pulse == low {
+					fmt.Println(i)
+					break
+				}
+				if pulse != none {
+					sOrder = sOrder.Push(Signal{current.receivers[r], pulse})
 				}
 			}
-			if allLow {
-				current.pulse = high
-			} else {
-				current.pulse = low
-			}
-		}
-		for r := range current.receivers {
-
-			if current.pulse != none {
-				current.Send(circuit[current.receivers[r]], current.pulse)
-			}
-			if current.t == flipflop {
-				current.pulse = none
-			}
 		}
 	}
-	fmt.Println(h, l)
+	fmt.Println(l, h)
+	fmt.Println(l * h)
 }
