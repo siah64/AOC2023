@@ -314,19 +314,15 @@ func main() {
 		}
 	}
 	result := 0
-	disintergratable := map[string]bool{}
 	for i := range supports {
-		disintergrate := true
+		fallingChild := 0
 		for children := range supports[i] {
 			fmt.Println(supportedBy[supports[i][children].label])
 			if len(supportedBy[supports[i][children].label]) == 1 {
-				disintergrate = false
+				fallingChild++
 			}
 		}
-		if disintergrate {
-			disintergratable[i] = true
-			result++
-		}
+		result += fallingChild
 	}
 	fmt.Println(result)
 }
