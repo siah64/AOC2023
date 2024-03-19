@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +13,14 @@ import (
 
 var cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 var sumCache = map[int][][]int{1: {{1}}, 2: {{1, 1}, {2}}}
+
+type State int64
+
+const (
+	Onsen    State = 0
+	OnsenEnd State = 1
+	Neutral  State = 2
+)
 
 func main() {
 	flag.Parse()
@@ -37,7 +44,7 @@ func main() {
 	for scanner.Scan() {
 		lines := strings.Split(scanner.Text(), " ")
 		s := lines[0]
-		f := 1
+		f := 5
 		for i := 1; i < f; i++ {
 			s += "?"
 			s += lines[0]
@@ -53,355 +60,106 @@ func main() {
 		}
 		springs = append(springs, spring)
 	}
-	//result := 0
+
+	result := 0
 	for i := range springs {
-		spring := springs[i]
-		config := info[i]
-		possible := calPermutations(spring, config)
-		//fmt.Printf("%v, possible: %d", config, possible)
-		fmt.Println(possible)
-		//config = "?"
-		//config += info[i]
-		// expo := calPermutations(spring, config)
-		// fmt.Printf("%v, possible: %d\n", config, expo)
-		// result += (possible * expo * expo * expo * expo)
+		test := map[string]int{}
+		temp := traverse(info[i], 0, springs[i], Neutral, test)
+		result += temp
 	}
-	//fmt.Println(result)
+	fmt.Println(result)
+
 }
-func calPermutations(spring []int, config string) int {
-	//f, _ := os.Create("./dat1")
-	sum := 0
-	for j := range spring {
-		sum += spring[j]
+
+func traverse(info string, pos int, spring []int, state State, mem map[string]int) int {
+	key := springToKey(info, pos, spring, state)
+	value, exist := mem[key]
+	if exist {
+		//fmt.Println("hi")
+		return value
 	}
-	sum = len(config) - sum
-	coins := make([]int, sum)
-	for j := 0; j < len(coins); j++ {
-		coins[j] = j + 1
+	if len(info) == pos {
+		if len(spring) == 0 {
+			return 1
+		}
+		return 0
 	}
-	solutions := count1(sum, len(spring)-1, len(spring)+1)
-	possible := 0
-	for s := range solutions {
-		damaged := make([]int, len(spring)+1)
-		solution := solutions[s]
-		if len(solution) <= len(damaged) {
-			for j := 0; j < len(solution); j++ {
-				damaged[j] = solution[j]
-			}
-			bag := [][]int{}
-			findPerms(damaged, 0, len(damaged), &bag)
-			fmt.Println(len(bag))
-			for j := 0; j < len(bag); j++ {
-				if legal(bag[j]) {
-					//test := fmt.Sprintf("%v\n", bag[j])
-					//f.Write([]byte(test))
-					//fmt.Println(bag[j])
-					ps := generate(bag[j], spring)
-					if possibleSolution(ps, config) {
-						possible++
-					}
+	if info[pos] == '#' {
+		if state == OnsenEnd || len(spring) == 0 {
+			return 0
+		}
+		temp := make([]int, len(spring))
+		copy(temp, spring)
+		temp[0] -= 1
+		if temp[0] == 0 {
+			mem[key] = traverse(info, pos+1, temp[1:], OnsenEnd, mem)
+			return mem[key]
+		} else {
+			mem[key] = traverse(info, pos+1, temp, Onsen, mem)
+			return mem[key]
+		}
+	} else if info[pos] == '.' {
+		if state == Onsen {
+			return 0
+		}
+		mem[key] = traverse(info, pos+1, spring, Neutral, mem)
+		return mem[key]
+	} else {
+		temp := make([]int, len(spring))
+		onsen := ""
+		right := Onsen
+		copy(temp, spring)
+		if len(spring) != 0 {
+			temp[0] -= 1
+			for i := range info {
+				if i != pos {
+					onsen += string(info[i])
+				} else {
+					onsen += "#"
 				}
 			}
-		}
-	}
-	return possible
-}
-func generate(damaged []int, functional []int) string {
-	var buffer bytes.Buffer
-	for i := range damaged {
-		for j := 0; j < damaged[i]; j++ {
-			buffer.WriteString(".")
-		}
-		if i < len(functional) {
-
-			for j := 0; j < functional[i]; j++ {
-				buffer.WriteString("#")
+			if temp[0] == 0 {
+				temp = temp[1:]
+				right = OnsenEnd
 			}
 		}
-	}
-	return buffer.String()
-}
-func count(coins []int, n int, sum int, p []int) [][]int {
-	if sumCache[sum] != nil {
-		return sumCache[sum]
-	}
-	if sum == 0 {
-		test := []int{}
-		for i := range p {
-			test = append(test, p[i])
-		}
-		return [][]int{test}
-	}
-	if sum < 0 {
-		return [][]int{}
-	}
-	if n <= 0 {
-		return [][]int{}
-	}
-	return append(count(coins, n, sum-coins[n-1], append(p, coins[n-1])), count(coins, n-1, sum, p)...)
-}
-
-func count1(sum int, min int, max int) [][]int {
-	answer := sumCache[sum]
-	temp := [][]int{}
-	if answer != nil {
-		//fmt.Printf("Cache hit %d \n", sum)
-		for i := range answer {
-			if len(answer[i]) >= min && len(answer[i]) <= max {
-				temp = append(temp, answer[i])
+		idle := ""
+		for i := range info {
+			if i != pos {
+				idle += string(info[i])
+			} else {
+				idle += "."
 			}
 		}
-		return temp
-	}
 
-	result := backtrack(sum, []int{}, 1)
-	sumCache[sum] = result
-	answer = result
-	for i := range answer {
-		if len(answer[i]) >= min && len(answer[i]) <= max {
-			temp = append(temp, answer[i])
-		}
-	}
-	return temp
-
-}
-
-func backtrack(remaining int, currentCombination []int, start int) [][]int {
-	if remaining == 0 {
-		return [][]int{append([]int{}, currentCombination...)}
-	}
-
-	var combinations [][]int
-
-	for i := start; i <= remaining; i++ {
-		newCombination := append([]int{i}, currentCombination...)
-		remainingCombos := backtrack(remaining-i, newCombination, i)
-		combinations = append(combinations, remainingCombos...)
-	}
-
-	return combinations
-}
-
-func legal(damaged []int) bool {
-	for i := 1; i < len(damaged)-1; i++ {
-		if damaged[i] == 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func shouldSwap(s []int, start, curr int) bool {
-	for i := start; i < curr; i++ {
-		if s[i] == s[curr] {
-			return false
-		}
-	}
-	return true
-}
-
-func findPerms(s []int, index, n int, res *[][]int) {
-	if index >= n {
-		t := make([]int, len(s))
-		copy(t, s)
-		*res = append(*res, t)
-		return
-	}
-	for i := index; i < n; i++ {
-		check := shouldSwap(s, index, i)
-		if check {
-			s[index], s[i] = s[i], s[index]
-			findPerms(s, index+1, n, res)
-			s[index], s[i] = s[i], s[index]
-		}
-	}
-}
-
-func possibleSolution(ps string, s string) bool {
-	for i := range s {
-		if s[i] != '?' {
-			if s[i] != ps[i] {
-				return false
+		if state == Neutral {
+			l := traverse(info, pos+1, spring, Neutral, mem)
+			r := 0
+			if len(onsen) > 0 {
+				r = traverse(info, pos+1, temp, right, mem)
 			}
+			mem[key] = l + r
+			return mem[key]
+		} else if state == Onsen {
+			r := 0
+			if len(onsen) > 0 {
+				r = traverse(info, pos+1, temp, right, mem)
+			}
+			mem[key] = r
+			return mem[key]
+		} else if state == OnsenEnd {
+			mem[key] = traverse(info, pos+1, spring, Neutral, mem)
+			return mem[key]
 		}
 	}
-	//fmt.Println(ps, s)
-	return true
+	return -100000000
 }
 
-// func main() {
-// 	flag.Parse()
-// 	if *cpuprofile != "" {
-// 		f, err := os.Create(*cpuprofile)
-// 		if err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		pprof.StartCPUProfile(f)
-// 		defer pprof.StopCPUProfile()
-// 	}
-// 	file, err := os.Open("../inputs/day12/testinput.txt")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer file.Close()
-// 	scanner := bufio.NewScanner(file)
-// 	scanner.Split(bufio.ScanLines)
-// 	springs := [][]int{}
-// 	info := []string{}
-// 	for scanner.Scan() {
-// 		lines := strings.Split(scanner.Text(), " ")
+func springToKey(info string, pos int, spring []int, state State) string {
+	result := ""
 
-// 		info = append(info, lines[0])
-// 		functionalSprings := strings.Split(lines[1], ",")
-// 		spring := []int{}
-// 		for i := range functionalSprings {
-// 			num, _ := strconv.Atoi(functionalSprings[i])
-// 			spring = append(spring, num)
-// 		}
-// 		springs = append(springs, spring)
-// 	}
-// 	result := 0
-// 	for i := range springs {
-// 		spring := springs[i]
-// 		sum := 0
-// 		for j := range spring {
-// 			sum += spring[j]
-// 		}
-// 		sum = len(info[i]) - sum
-// 		coins := make([]int, sum)
-// 		for j := 0; j < len(coins); j++ {
-// 			coins[j] = j + 1
-// 		}
-// 		solutions := count1(sum)
-// 		possible := 0
-// 		for s := range solutions {
-// 			damaged := make([]int, len(spring)+1)
-// 			solution := solutions[s]
-// 			if len(solution) <= len(damaged) {
-// 				for j := 0; j < len(solution); j++ {
-// 					damaged[j] = solution[j]
-// 				}
-// 				bag := [][]int{}
-// 				findPerms(damaged, 0, len(damaged), &bag)
-// 				for j := 0; j < len(bag); j++ {
-// 					if legal(bag[j]) {
-// 						ps := generate(bag[j], spring)
-// 						if possibleSolution(ps, info[i]) {
-// 							possible++
-// 						}
-// 					}
-// 				}
-// 			}
-// 		}
-// 		fmt.Printf("%v, possible: %d\n", info[i], possible)
-// 		result += possible
-// 	}
-// 	fmt.Println(result)
-// }
-// func generate(damaged []int, functional []int) string {
-// 	s := ""
-// 	for i := range damaged {
-// 		for j := 0; j < damaged[i]; j++ {
-// 			s += "."
-// 		}
-// 		if i < len(functional) {
-
-// 			for j := 0; j < functional[i]; j++ {
-// 				s += "#"
-// 			}
-// 		}
-// 	}
-// 	return s
-// }
-// func count(coins []int, n int, sum int, p []int) [][]int {
-// 	if sumCache[sum] != nil {
-// 		return sumCache[sum]
-// 	}
-// 	if sum == 0 {
-// 		test := []int{}
-// 		for i := range p {
-// 			test = append(test, p[i])
-// 		}
-// 		return [][]int{test}
-// 	}
-// 	if sum < 0 {
-// 		return [][]int{}
-// 	}
-// 	if n <= 0 {
-// 		return [][]int{}
-// 	}
-// 	return append(count(coins, n, sum-coins[n-1], append(p, coins[n-1])), count(coins, n-1, sum, p)...)
-// }
-
-// func count1(sum int) [][]int {
-// 	if sumCache[sum] != nil {
-// 		//fmt.Printf("Cache hit %d \n", sum)
-// 		return sumCache[sum]
-// 	}
-
-// 	result := backtrack(sum, []int{}, 1)
-// 	sumCache[sum] = result
-// 	return sumCache[sum]
-// }
-
-// func backtrack(remaining int, currentCombination []int, start int) [][]int {
-// 	if remaining == 0 {
-// 		return [][]int{append([]int{}, currentCombination...)}
-// 	}
-
-// 	var combinations [][]int
-
-// 	for i := start; i <= remaining; i++ {
-// 		newCombination := append([]int{i}, currentCombination...)
-// 		remainingCombos := backtrack(remaining-i, newCombination, i)
-// 		combinations = append(combinations, remainingCombos...)
-// 	}
-
-// 	return combinations
-// }
-
-// func legal(damaged []int) bool {
-// 	for i := 1; i < len(damaged)-1; i++ {
-// 		if damaged[i] == 0 {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-
-// func shouldSwap(s []int, start, curr int) bool {
-// 	for i := start; i < curr; i++ {
-// 		if s[i] == s[curr] {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
-
-// func findPerms(s []int, index, n int, res *[][]int) {
-// 	if index >= n {
-// 		t := make([]int, len(s))
-// 		copy(t, s)
-// 		*res = append(*res, t)
-// 		return
-// 	}
-// 	for i := index; i < n; i++ {
-// 		check := shouldSwap(s, index, i)
-// 		if check {
-// 			s[index], s[i] = s[i], s[index]
-// 			findPerms(s, index+1, n, res)
-// 			s[index], s[i] = s[i], s[index]
-// 		}
-// 	}
-// }
-
-// func possibleSolution(ps string, s string) bool {
-// 	for i := range s {
-// 		if s[i] != '?' {
-// 			if s[i] != ps[i] {
-// 				return false
-// 			}
-// 		}
-// 	}
-// 	return true
-// }
+	for i := range spring {
+		result += fmt.Sprint(spring[i]) + ","
+	}
+	return info + result + "p:" + fmt.Sprint(pos) + "s:" + fmt.Sprint(state)
+}
