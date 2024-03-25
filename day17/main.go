@@ -25,9 +25,9 @@ var costs = [][]int{}
 // graph representation is virtual.  Arcs from a node are generated when
 // requested, but there is no static graph representation.
 func (fr rcNode) To() (a []astar.Arc) {
-	for r := fr.r - 3; r <= fr.r+3; r++ {
-		for c := fr.c - 3; c <= fr.c+3; c++ {
-			if (r == fr.r && c == fr.c) || r < 0 || r > width || c < 0 || c > height || (r != fr.r && c != fr.c) {
+	for r := fr.r - 10; r <= fr.r+10; r++ { //for r := fr.r - 3; r <= fr.r+3; r++ {
+		for c := fr.c - 10; c <= fr.c+10; c++ { //for c := fr.c - 3; c <= fr.c+3; c++ {
+			if (r == fr.r && c == fr.c) || r < 0 || r > width || c < 0 || c > height || (r != fr.r && c != fr.c) || (abs(fr.r-r) < 4 && fr.c == c) || (abs(fr.c-c) < 4 && fr.r == r) {
 				continue
 			}
 
@@ -70,6 +70,13 @@ func (fr rcNode) To() (a []astar.Arc) {
 		}
 	}
 	return a
+}
+
+func abs(a int) int {
+	if a > 0 {
+		return a
+	}
+	return a * -1
 }
 
 // The heuristic computed is max of row distance and column distance.
